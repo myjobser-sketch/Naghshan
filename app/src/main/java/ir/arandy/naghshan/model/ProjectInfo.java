@@ -1,0 +1,32 @@
+package ir.arandy.naghshan.model;
+
+import java.io.Serializable;
+
+/** اطلاعات کلی طرح استخراج‌شده از PDF. */
+public class ProjectInfo implements Serializable {
+
+    private String projectNumber;    // شماره طرح  (S05472262)
+    private String applicantName;    // متقاضی     (عبدالله شاهزاده)
+    private String requestNumber;    // شماره درخواست (472415617)
+
+    public ProjectInfo() { }
+
+    public ProjectInfo(String projectNumber, String applicantName, String requestNumber) {
+        this.projectNumber = projectNumber;
+        this.applicantName = applicantName;
+        this.requestNumber = requestNumber;
+    }
+
+    public String getProjectNumber() { return projectNumber; }
+    public void   setProjectNumber(String v) { this.projectNumber = v; }
+
+    public String getApplicantName() { return applicantName; }
+    public void   setApplicantName(String v) { this.applicantName = v; }
+
+    public String getRequestNumber() { return requestNumber; }
+    public void   setRequestNumber(String v) { this.requestNumber = v; }
+
+    public boolean isValid() {
+        return projectNumber != null && !projectNumber.isEmpty();
+    }
+}

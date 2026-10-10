@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+        android:background="#1E3A8A"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:title="تغییرات مالی فاکتور"
+        app:titleTextColor="#FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- گام ۱ -->
+            <TextView android:text="گام ۱: انتخاب فایل پایه"
+                android:textStyle="bold" android:textSize="15sp"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" app:cardCornerRadius="12dp">
+                <LinearLayout android:padding="14dp" android:orientation="vertical"
+                    android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <TextView android:id="@+id/txtBaseFileName"
+                        android:text="nagh-unknown.xlsx"
+                        android:textStyle="bold"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                    <Button android:layout_marginTop="8dp"
+                        android:text="تغییر فایل"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- گام ۲ -->
+            <TextView android:text="گام ۲: اعمال درصد تغییرات"
+                android:textStyle="bold" android:textSize="15sp"
+                android:layout_marginTop="18dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" app:cardCornerRadius="12dp">
+                <LinearLayout android:padding="14dp" android:orientation="vertical"
+                    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+                    <RadioGroup android:orientation="horizontal"
+                        android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <RadioButton android:id="@+id/radioIncrease"
+                            android:text="افزایش" android:checked="true"
+                            android:layout_width="0dp" android:layout_weight="1"
+                            android:layout_height="wrap_content"/>
+                        <RadioButton android:id="@+id/radioDecrease"
+                            android:text="کاهش"
+                            android:layout_width="0dp" android:layout_weight="1"
+                            android:layout_height="wrap_content"/>
+                    </RadioGroup>
+
+                    <EditText android:id="@+id/editPercent"
+                        android:hint="درصد تغییرات (مثلاً ۱۵)"
+                        android:inputType="numberDecimal"
+                        android:layout_marginTop="8dp"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+                    <CheckBox android:id="@+id/checkMaterial"
+                        android:text="اعمال بر مبلغ جنس" android:checked="true"
+                        android:layout_marginTop="8dp"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                    <CheckBox android:id="@+id/checkLabor"
+                        android:text="اعمال بر مبلغ دستمزد" android:checked="true"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+                    <Button android:id="@+id/btnApply"
+                        android:text="اعمال تغییرات"
+                        android:layout_marginTop="10dp"
+                        android:backgroundTint="#F59E0B" android:textColor="#FFFFFF"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- گام ۳ -->
+            <TextView android:text="گام ۳: پیش‌نمایش و خروجی"
+                android:textStyle="bold" android:textSize="15sp"
+                android:layout_marginTop="18dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="#E8F5E9">
+                <LinearLayout android:padding="14dp" android:orientation="vertical"
+                    android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <TextView android:text="مبلغ کل جدید:"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/txtNewTotal"
+                        android:textSize="22sp" android:textStyle="bold"
+                        android:textColor="#1B5E20"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <LinearLayout android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <Button android:id="@+id/btnExportPdf"
+                    android:text="خروجی PDF"
+                    android:layout_width="0dp" android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#EF4444" android:textColor="#FFFFFF"/>
+                <Button android:id="@+id/btnExportExcel"
+                    android:layout_marginStart="8dp"
+                    android:text="خروجی Excel"
+                    android:layout_width="0dp" android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#059669" android:textColor="#FFFFFF"/>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

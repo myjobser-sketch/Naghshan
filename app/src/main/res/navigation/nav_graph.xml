@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/invoiceFragment">
+
+    <fragment android:id="@+id/invoiceFragment"
+        android:name="ir.arandy.naghshan.ui.invoice.InvoiceFragment"
+        android:label="Invoice">
+        <action android:id="@+id/action_invoice_to_output"
+            app:destination="@id/outputFragment"/>
+    </fragment>
+
+    <fragment android:id="@+id/outputFragment"
+        android:name="ir.arandy.naghshan.ui.output.OutputFragment"
+        android:label="Output"/>
+</navigation>

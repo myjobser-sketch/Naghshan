@@ -1,0 +1,29 @@
+<resources>
+    <color name="primary">#1E3A8A</color>
+    <color name="primary_dark">#172554</color>
+    <color name="primary_light">#DBEAFE</color>
+
+    <color name="accent">#F59E0B</color>
+    <color name="accent_dark">#D97706</color>
+
+    <color name="bg">#F5F7FA</color>
+    <color name="card_bg">#FFFFFF</color>
+
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="green">#059669</color>
+    <color name="green_light">#E8F5E9</color>
+    <color name="green_dark">#1B5E20</color>
+
+    <color name="red">#EF4444</color>
+    <color name="red_light">#FEE2E2</color>
+
+    <color name="blue">#2563EB</color>
+    <color name="blue_light">#DBEAFE</color>
+
+    <color name="purple_light">#EDE9FE</color>
+</resources>

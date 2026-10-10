@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">نقشان</string>
+
+    <string name="home_title">نقشان</string>
+    <string name="home_pro_active">نسخه حرفه‌ای فعال است</string>
+    <string name="home_main_actions">اقدامات اصلی</string>
+    <string name="home_convert_pdf">تبدیل طرح به فاکتور</string>
+    <string name="home_invoice_changes">تغییرات فاکتور</string>
+    <string name="home_make_contract">تولید قرارداد</string>
+    <string name="home_history">تاریخچه پروژه‌ها</string>
+    <string name="home_other_items">سایر موارد</string>
+    <string name="home_support">راهنما و پشتیبانی</string>
+    <string name="home_last_total">آخرین جمع کل: -</string>
+
+    <string name="invoice_title">ویرایش و پیش‌نمایش طرح</string>
+    <string name="invoice_save">ذخیره</string>
+    <string name="invoice_project_number">شماره طرح:</string>
+    <string name="invoice_applicant">متقاضی:</string>
+    <string name="invoice_request_number">شماره درخواست:</string>
+    <string name="invoice_search_hint">جستجوی کالا…</string>
+    <string name="invoice_filter">فیلتر</string>
+    <string name="invoice_sort">مرتب‌سازی</string>
+    <string name="invoice_list_count">لیست کالاها (0 قلم)</string>
+    <string name="invoice_apply_changes">اعمال تغییرات مالی</string>
+    <string name="invoice_get_output">خروجی گرفتن</string>
+    <string name="invoice_total_extracted">جمع کل استخراج شده:</string>
+
+    <string name="output_title">تغییرات مالی فاکتور</string>
+    <string name="output_step1">گام ۱: انتخاب فایل پایه</string>
+    <string name="output_change_file">تغییر فایل</string>
+    <string name="output_step2">گام ۲: اعمال درصد تغییرات</string>
+    <string name="output_increase">افزایش</string>
+    <string name="output_decrease">کاهش</string>
+    <string name="output_percent_hint">درصد تغییرات (مثلاً ۱۵)</string>
+    <string name="output_apply_to_material">اعمال بر مبلغ جنس</string>
+    <string name="output_apply_to_labor">اعمال بر مبلغ دستمزد</string>
+    <string name="output_apply">اعمال تغییرات</string>
+    <string name="output_step3">گام ۳: پیش‌نمایش و خروجی</string>
+    <string name="output_new_total">مبلغ کل جدید:</string>
+    <string name="output_pdf">خروجی PDF</string>
+    <string name="output_excel">خروجی Excel</string>
+
+    <string name="nav_home">خانه</string>
+    <string name="nav_projects">پروژه‌ها</string>
+    <string name="nav_tools">ابزارها</string>
+    <string name="nav_profile">پروفایل</string>
+
+    <string name="toast_pick_pdf_first">ابتدا یک فایل PDF انتخاب کنید</string>
+    <string name="toast_extract_done">استخراج انجام شد. اقلام: %1$d</string>
+    <string name="toast_error">خطا: %1$s</string>
+</resources>

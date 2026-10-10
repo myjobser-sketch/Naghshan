@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#1E3A8A"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:title="ویرایش و پیش‌نمایش طرح"
+        app:titleTextColor="#FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <LinearLayout
+        android:id="@+id/headerBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:background="#FFFFFF"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <TextView android:id="@+id/txtProjectNumber"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textStyle="bold" android:text="شماره طرح: -"/>
+        <TextView android:id="@+id/txtApplicant"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="متقاضی: -"/>
+        <TextView android:id="@+id/txtRequestNumber"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="شماره درخواست: -"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtItemsCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="14dp"
+        android:text="لیست کالاها"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/headerBox"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/txtItemsCount"
+        app:layout_constraintBottom_toTopOf="@id/totalBox"/>
+
+    <LinearLayout
+        android:id="@+id/totalBox"
+        android:orientation="vertical"
+        android:background="#E8F5E9"
+        android:padding="14dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/actionBar">
+        <TextView android:text="جمع کل استخراج شده:"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:id="@+id/txtTotal"
+            android:textStyle="bold" android:textSize="18sp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/actionBar"
+        android:orientation="horizontal"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <Button android:id="@+id/btnApplyChanges"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="اعمال تغییرات مالی"
+            android:backgroundTint="#F59E0B"
+            android:textColor="#FFFFFF"/>
+        <Button android:id="@+id/btnExport"
+            android:layout_marginStart="8dp"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="خروجی گرفتن"
+            android:backgroundTint="#2563EB"
+            android:textColor="#FFFFFF"/>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

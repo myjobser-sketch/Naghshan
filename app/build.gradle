@@ -1,0 +1,53 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'ir.arandy.naghshan'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "ir.arandy.naghshan"
+        minSdk 27
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.activity.ktx
+    implementation libs.androidx.lifecycle.viewmodel
+    implementation libs.appcompat
+    implementation libs.constraintlayout
+    implementation libs.fragment
+    implementation libs.material
+    implementation libs.navigation.fragment.ktx
+    implementation libs.navigation.ui.ktx
+
+    testImplementation libs.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.ext.junit
+    implementation libs.androidx.lifecycle.viewmodel
+    implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
+    implementation 'org.dhatim:fastexcel:0.18.4'
+
+}

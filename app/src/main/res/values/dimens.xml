@@ -1,0 +1,6 @@
+<resources>
+    <dimen name="screen_padding">16dp</dimen>
+    <dimen name="card_corner">14dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="toolbar_height">?attr/actionBarSize</dimen>
+</resources>
