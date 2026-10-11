@@ -2,44 +2,59 @@ package ir.arandy.naghshan.model;
 
 import java.io.Serializable;
 
-/** یک ردیف کالا در جدول فاکتور. */
+/** یک ردیف کالا در جدول لیست کالا. */
 public class Kala implements Serializable {
 
-    private int    rowNumber;         // ردیف
-    private String productCode;       // کد کالا
-    private String productName;       // نام کالا (ممکن است چند خطی باشد)
-    private String unit;              // واحد  (متر، عدد، ...)
-    private String type;              // نوع / اصل
-    private long   quantity;          // تعداد
-    private long   materialPrice;     // مبلغ جنس
-    private long   laborPrice;        // مبلغ دستمزد
+    private String tableName;      // زیرعنوان جدول (مثلاً "شبکه فشارمتوسط هوایی(پیشنهادی)")
+    private int    rowNumber;      // ردیف
+    private String productCode;    // کد کالا
+    private String productName;    // نام کالا
+    private String unit;           // واحد
+    private String type;           // نوع
+    private double quantity;       // تعداد (ممکن است اعشاری باشد)
+    private long   materialPrice;  // مبلغ جنس
+    private long   laborPrice;     // مبلغ دستمزد
+    private long   totalPrice;     // مبلغ کل (از خود PDF)
 
     public Kala() { }
 
-    public long getTotalPrice() { return materialPrice + laborPrice; }
+    // --- tableName ---
+    public String getTableName() { return tableName; }
+    public void   setTableName(String v) { this.tableName = v; }
 
-    // getters / setters
-    public int    getRowNumber()      { return rowNumber; }
-    public void   setRowNumber(int v) { rowNumber = v; }
+    // --- rowNumber ---
+    public int  getRowNumber()      { return rowNumber; }
+    public void setRowNumber(int v) { rowNumber = v; }
 
+    // --- productCode ---
     public String getProductCode()      { return productCode; }
     public void   setProductCode(String v) { productCode = v; }
 
+    // --- productName ---
     public String getProductName()      { return productName; }
     public void   setProductName(String v) { productName = v; }
 
+    // --- unit ---
     public String getUnit()      { return unit; }
     public void   setUnit(String v) { unit = v; }
 
+    // --- type ---
     public String getType()      { return type; }
     public void   setType(String v) { type = v; }
 
-    public long   getQuantity()      { return quantity; }
-    public void   setQuantity(long v) { quantity = v; }
+    // --- quantity ---
+    public double getQuantity()      { return quantity; }
+    public void   setQuantity(double v) { quantity = v; }
 
-    public long   getMaterialPrice()      { return materialPrice; }
-    public void   setMaterialPrice(long v) { materialPrice = v; }
+    // --- materialPrice ---
+    public long getMaterialPrice()      { return materialPrice; }
+    public void setMaterialPrice(long v) { materialPrice = v; }
 
-    public long   getLaborPrice()      { return laborPrice; }
-    public void   setLaborPrice(long v) { laborPrice = v; }
+    // --- laborPrice ---
+    public long getLaborPrice()      { return laborPrice; }
+    public void setLaborPrice(long v) { laborPrice = v; }
+
+    // --- totalPrice ---
+    public long getTotalPrice()      { return totalPrice; }
+    public void setTotalPrice(long v) { totalPrice = v; }
 }

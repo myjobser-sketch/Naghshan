@@ -5,17 +5,13 @@ import java.util.List;
 
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.model.Kala;
+import ir.arandy.naghshan.model.KalaTable;
 
-/** مسئول تمام محاسبات مالی. مستقل از Parser و UI. */
+/** مسئول تمام محاسبات مالی. */
 public class InvoiceCalculator {
 
-    /**
-     * یک کپی از Invoice می‌سازد که در آن درصد داده‌شده روی مبالغ اعمال شده است.
-     * درصد می‌تواند منفی باشد (کاهش).
-     */
     public Invoice applyAdjustment(Invoice src, double percent,
                                    boolean toMaterial, boolean toLabor) {
-
         double factor = 1.0 + (percent / 100.0);
 
         Invoice out = new Invoice();
@@ -24,27 +20,36 @@ public class InvoiceCalculator {
         out.setApplyToMaterial(toMaterial);
         out.setApplyToLabor(toLabor);
 
-        List<Kala> newItems = new ArrayList<>(src.getItems().size());
-        for (Kala k : src.getItems()) {
-            Kala n = new Kala();
-            n.setRowNumber(k.getRowNumber());
-            n.setProductCode(k.getProductCode());
-            n.setProductName(k.getProductName());
-            n.setUnit(k.getUnit());
-            n.setType(k.getType());
-            n.setQuantity(k.getQuantity());
+        List<KalaTable> newTables = new ArrayList<>();
+        for (KalaTable oldTable : src.getTables()) {
+            KalaTable newTable = new KalaTable(oldTable.getName());
+            List<Kala> newItems = new ArrayList<>();
+            for (Kala k : oldTable.getItems()) {
+                Kala n = new Kala();
+                n.setTableName(k.getTableName());
+                n.setRowNumber(k.getRowNumber());
+                n.setProductCode(k.getProductCode());
+                n.setProductName(k.getProductName());
+                n.setUnit(k.getUnit());
+                n.setType(k.getType());
+                n.setQuantity(k.getQuantity());
 
-            long mat = k.getMaterialPrice();
-            long lab = k.getLaborPrice();
+                // قیمت واحد جنس/دستمزد
+                long mat = k.getMaterialPrice();
+                long lab = k.getLaborPrice();
+                if (toMaterial) mat = Math.round(mat * factor);
+                if (toLabor)    lab = Math.round(lab * factor);
 
-            if (toMaterial) mat = Math.round(mat * factor);
-            if (toLabor)    lab = Math.round(lab * factor);
-
-            n.setMaterialPrice(mat);
-            n.setLaborPrice(lab);
-            newItems.add(n);
+                n.setMaterialPrice(mat);
+                n.setLaborPrice(lab);
+                // مبلغ کل ردیف = تعداد × (قیمت واحد جنس + قیمت واحد دستمزد)
+                n.setTotalPrice(Math.round(k.getQuantity() * (mat + lab)));
+                newItems.add(n);
+            }
+            newTable.setItems(newItems);
+            newTables.add(newTable);
         }
-        out.setItems(newItems);
+        out.setTables(newTables);
         return out;
     }
 }

@@ -4,13 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/** مدل اصلی خروجی Parser: اطلاعات طرح + لیست کالاها. */
+/** مدل اصلی خروجی Parser: اطلاعات طرح + جدول‌های لیست کالا. */
 public class Invoice implements Serializable {
 
     private ProjectInfo projectInfo = new ProjectInfo();
-    private List<Kala> items = new ArrayList<>();
+    private List<KalaTable> tables = new ArrayList<>();
 
-    /** درصد آخرین تغییرات اعمال‌شده (مثلاً 15 یعنی 15%). منفی = کاهش. */
     private double appliedPercent = 0.0;
     private boolean applyToMaterial = true;
     private boolean applyToLabor    = true;
@@ -18,8 +17,8 @@ public class Invoice implements Serializable {
     public ProjectInfo getProjectInfo() { return projectInfo; }
     public void setProjectInfo(ProjectInfo p) { this.projectInfo = p; }
 
-    public List<Kala> getItems() { return items; }
-    public void setItems(List<Kala> v) { this.items = v; }
+    public List<KalaTable> getTables() { return tables; }
+    public void setTables(List<KalaTable> v) { this.tables = v; }
 
     public double getAppliedPercent() { return appliedPercent; }
     public void setAppliedPercent(double v) { appliedPercent = v; }
@@ -30,13 +29,17 @@ public class Invoice implements Serializable {
     public boolean isApplyToLabor() { return applyToLabor; }
     public void setApplyToLabor(boolean v) { applyToLabor = v; }
 
+    /** جمع کل همه جدول‌ها. */
     public long getMaterialTotal() {
-        long s = 0; for (Kala k : items) s += k.getMaterialPrice(); return s;
+        long s = 0; for (KalaTable t : tables) s += t.getMaterialTotal(); return s;
     }
     public long getLaborTotal() {
-        long s = 0; for (Kala k : items) s += k.getLaborPrice(); return s;
+        long s = 0; for (KalaTable t : tables) s += t.getLaborTotal(); return s;
     }
     public long getGrandTotal() {
-        long s = 0; for (Kala k : items) s += k.getTotalPrice(); return s;
+        long s = 0; for (KalaTable t : tables) s += t.getGrandTotal(); return s;
+    }
+    public int getItemsCount() {
+        int n = 0; for (KalaTable t : tables) n += t.getItems().size(); return n;
     }
 }

@@ -1,22 +1,20 @@
 package ir.arandy.naghshan.ui.home;
 
-import static androidx.activity.result.ActivityResultCallerKt.registerForActivityResult;
-
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
-import ir.arandy.naghshan.R;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import ir.arandy.naghshan.R;
 import ir.arandy.naghshan.databinding.ActivityHomeBinding;
-import ir.arandy.naghshan.ui.invoice.InvoiceFragment;
-import ir.arandy.naghshan.ui.invoice.InvoiceActivity;
 import ir.arandy.naghshan.model.Invoice;
+import ir.arandy.naghshan.ui.invoice.InvoiceActivity;
+import ir.arandy.naghshan.ui.invoice.InvoiceFragment;
 import ir.arandy.naghshan.util.MoneyFormatter;
 
 public class HomeActivity extends AppCompatActivity {
@@ -47,33 +45,53 @@ public class HomeActivity extends AppCompatActivity {
         binding.cardInvoiceChanges.setOnClickListener(v -> {
             Invoice inv = vm.getInvoice().getValue();
             if (inv == null) {
-                Toast.makeText(this, "ابتدا یک فایل PDF انتخاب کنید", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_pick_pdf_first),
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
             startActivity(new Intent(this, InvoiceActivity.class)
                     .putExtra(InvoiceFragment.ARG_INVOICE, inv));
         });
 
+        binding.bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                return true;
+            } else if (id == R.id.nav_projects) {
+                Toast.makeText(this, "پروژه‌ها (به‌زودی)", Toast.LENGTH_SHORT).show();
+                return false;
+            } else if (id == R.id.nav_tools) {
+                Toast.makeText(this, "ابزارها (به‌زودی)", Toast.LENGTH_SHORT).show();
+                return false;
+            } else if (id == R.id.nav_profile) {
+                Toast.makeText(this, "پروفایل (به‌زودی)", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            return false;
+        });
+
         vm.getState().observe(this, s -> {
             if (s == null) return;
             switch (s) {
                 case LOADING:
-                    binding.progress.setVisibility(android.view.View.VISIBLE);
+                    binding.progress.setVisibility(View.VISIBLE);
                     break;
                 case SUCCESS:
-                    binding.progress.setVisibility(android.view.View.GONE);
+                    binding.progress.setVisibility(View.GONE);
                     Invoice inv = vm.getInvoice().getValue();
                     if (inv != null) {
+                        // ⬇️ تغییر اینجا: getItemsCount() به‌جای getItems().size()
                         Toast.makeText(this,
-                                "استخراج انجام شد. اقلام: " + inv.getItems().size(),
+                                getString(R.string.toast_extract_done, inv.getItemsCount()),
                                 Toast.LENGTH_SHORT).show();
                         binding.txtLastTotal.setText(
                                 "آخرین جمع کل: " + MoneyFormatter.formatWithRial(inv.getGrandTotal()));
                     }
                     break;
                 case ERROR:
-                    binding.progress.setVisibility(android.view.View.GONE);
-                    Toast.makeText(this, "خطا: " + vm.getError().getValue(),
+                    binding.progress.setVisibility(View.GONE);
+                    Toast.makeText(this,
+                            getString(R.string.toast_error, vm.getError().getValue()),
                             Toast.LENGTH_LONG).show();
                     break;
             }

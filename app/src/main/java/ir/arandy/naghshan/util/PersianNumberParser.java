@@ -55,6 +55,28 @@ public final class PersianNumberParser {
         }
     }
 
+    /** تبدیل تعداد که ممکن است اعشاری باشد (مثل 1.5 یا ۰/۸). */
+    public static double parseQuantity(String in) {
+        if (in == null) return 0;
+        String s = toLatinDigits(in).trim();
+        // اگر جداکننده اعشار فارسی بود
+        s = s.replace("٫", ".").replace("،", "").replace(",", "");
+        // حذف جداکننده هزارگان انگلیسی به‌جز نقطه اعشار
+        try {
+            // اگر عدد صحیح بزرگ بود، نقطه را حذف کن
+            if (s.contains(".") && s.length() > 3) {
+                // احتمالاً جداکننده هزارگان است، نه اعشار
+                String[] parts = s.split("\\.");
+                if (parts.length == 2 && parts[1].length() == 3) {
+                    s = parts[0] + parts[1];
+                }
+            }
+            return Double.parseDouble(s);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     private static int indexOf(char[] arr, char c) {
         for (int i = 0; i < arr.length; i++) if (arr[i] == c) return i;
         return -1;

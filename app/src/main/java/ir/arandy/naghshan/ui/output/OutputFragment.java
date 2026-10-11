@@ -1,13 +1,17 @@
 package ir.arandy.naghshan.ui.output;
 
 import android.os.Bundle;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import ir.arandy.naghshan.data.repository.InvoiceRepository;
 import ir.arandy.naghshan.databinding.FragmentOutputBinding;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.util.MoneyFormatter;
@@ -26,13 +30,18 @@ public class OutputFragment extends Fragment {
 
     @Override public void onViewCreated(@NonNull View v, @Nullable Bundle s) {
         super.onViewCreated(v, s);
+
         vm = new ViewModelProvider(this).get(OutputViewModel.class);
 
-        Invoice inv = (Invoice) getArguments().getSerializable(ARG_INVOICE);
-        if (inv != null) {
-            vm.setInvoice(inv);
-            b.txtBaseFileName.setText(
-                    "nagh-" + inv.getProjectInfo().getProjectNumber() + ".xlsx");
+        b.toolbar.setNavigationOnClickListener(x -> requireActivity().onBackPressed());
+
+        if (getArguments() != null) {
+            Invoice inv = (Invoice) getArguments().getSerializable(ARG_INVOICE);
+            if (inv != null) {
+                vm.setInvoice(inv);
+                b.txtBaseFileName.setText(
+                        "nagh-" + inv.getProjectInfo().getProjectNumber() + ".xlsx");
+            }
         }
 
         b.radioIncrease.setChecked(true);
@@ -51,15 +60,19 @@ public class OutputFragment extends Fragment {
 
     private void apply() {
         double pct = 0;
-        try { pct = Double.parseDouble(b.editPercent.getText().toString()); } catch (Exception ignored) {}
+        try {
+            pct = Double.parseDouble(b.editPercent.getText().toString());
+        } catch (Exception ignored) {}
+
         if (!b.radioIncrease.isChecked()) pct = -pct;
+
         boolean mat = b.checkMaterial.isChecked();
         boolean lab = b.checkLabor.isChecked();
 
         Invoice base = vm.getInvoice().getValue();
         if (base == null) return;
 
-        Invoice updated = new ir.arandy.naghshan.data.repository.InvoiceRepository(
+        Invoice updated = new InvoiceRepository(
                 requireContext().getApplicationContext())
                 .applyAdjustment(base, pct, mat, lab);
         vm.setInvoice(updated);
