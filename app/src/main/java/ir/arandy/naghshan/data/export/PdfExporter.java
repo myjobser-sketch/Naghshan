@@ -13,6 +13,7 @@ import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.model.Kala;
 import ir.arandy.naghshan.model.KalaTable;
 import ir.arandy.naghshan.util.MoneyFormatter;
+import ir.arandy.naghshan.util.PersianTextShaper;
 
 /**
  * ساخت PDF نهایی.
@@ -98,6 +99,27 @@ public class PdfExporter {
 
     private static String safe(String s) { return s == null ? "" : s; }
 
+    /**
+     * جایگزینی کاراکترهایی که فونت آن‌ها را پشتیبانی نمی‌کند با '?'.
+     * این کار از پرتاب شدن IllegalArgumentException جلوگیری می‌کند.
+     */
+    private static String sanitize(String input, PDType0Font font) {
+        if (input == null || input.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            try {
+                // تلاش برای دریافت عرض کاراکتر؛ اگر خطا بدهد یعنی گلیف وجود ندارد
+                font.getStringWidth(String.valueOf(c));
+                sb.append(c);
+            } catch (Exception e) {
+                // کاراکتر پشتیبانی نمی‌شود، با '?' جایگزین کن
+                sb.append('?');
+            }
+        }
+        return sb.toString();
+    }
+
     // ------------------------------------------------------------------
     //  کلاس داخلی برای مدیریت صفحه‌بندی
     // ------------------------------------------------------------------
@@ -126,10 +148,15 @@ public class PdfExporter {
         void write(String text, int size, boolean bold) throws IOException {
             if (y < MARGIN + LINE_H * 2) newPage();
 
+            // ۱) شکل‌دهی فارسی
+            String shaped = PersianTextShaper.shape(text == null ? "" : text);
+            // ۲) حذف کاراکترهای ناموجود در فونت
+            String safe = sanitize(shaped, font);
+
             cs.beginText();
             cs.setFont(font, size);
             cs.newLineAtOffset(MARGIN, y);
-            cs.showText(text == null ? "" : text);
+            cs.showText(safe);
             cs.endText();
             y -= LINE_H + 2;
         }
