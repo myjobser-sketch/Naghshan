@@ -11,16 +11,9 @@ import ir.arandy.naghshan.data.pdf.PdfTextExtractor.TextElement;
 import ir.arandy.naghshan.model.Kala;
 import ir.arandy.naghshan.util.PersianNumberParser;
 
-/**
- * تبدیل ردیف‌ها به Kala.
- * روش: شماره ردیف به‌عنوان «لنگر» و اختصاص هر المان به نزدیک‌ترین لنگر (Y).
- * مرزهای ستون از مرکز واقعی سرستون‌ها ساخته می‌شود.
- */
 public class TableRowAssembler {
 
     private static final String TAG = "NAGHSHAN_PARSER";
-
-    /** بیشینه فاصله Y یک المان تا لنگر ردیف (ردیف‌های چندخطی وسط‌چین‌اند). */
     private static final float MAX_ROW_DY = 40f;
 
     private final TableDetector.DetectedTable table;
@@ -32,10 +25,8 @@ public class TableRowAssembler {
     public List<Kala> assemble() {
         Log.i(TAG, "assemble: table='" + (table == null ? "null" : table.name) + "'");
         List<Kala> result = new ArrayList<>();
-        if (table == null || table.rows.isEmpty()) {
-            Log.w(TAG, "assemble: table is empty");
-            return result;
-        }
+        if (table == null || table.rows.isEmpty()) return result;
+
         float[] bounds = buildBounds();
         if (bounds == null) return result;
 
@@ -44,7 +35,7 @@ public class TableRowAssembler {
                 .comparingInt((TextElement e) -> e.pageIndex)
                 .thenComparingDouble(e -> e.y));
 
-        // ---- ۱) لنگرها: عدد ردیف در ستون ۰ با شمارش متوالی (۱، ۲، ۳، ...) ----
+        // ---- لنگرها ----
         List<TextElement> anchors = new ArrayList<>();
         int prev = 0;
         for (TextElement e : sorted) {
@@ -59,7 +50,7 @@ public class TableRowAssembler {
         Log.i(TAG, "  anchors=" + n);
         if (n == 0) return result;
 
-        // ---- ۲) هر المان به نزدیک‌ترین لنگر (همان صفحه) نسبت داده می‌شود ----
+        // ---- Bucketها ----
         List<List<List<TextElement>>> buckets = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             List<List<TextElement>> cols = new ArrayList<>();
@@ -80,21 +71,35 @@ public class TableRowAssembler {
             buckets.get(best).get(columnOf(e, bounds)).add(e);
         }
 
-        // ---- ۳) ساخت Kala ----
+        // ---- ساخت Kala ----
         long sumTotal = 0;
         for (int i = 0; i < n; i++) {
             List<List<TextElement>> cols = buckets.get(i);
             Kala k = new Kala();
             k.setTableName(table.name);
             k.setRowNumber((int) PersianNumberParser.parseLong(anchors.get(i).text));
-            k.setProductCode(PersianNumberParser.toLatinDigits(joinCell(cols.get(1), true)));
-            k.setProductName(clean(joinCell(cols.get(2), false)));
-            k.setUnit(clean(joinCell(cols.get(3), true)));
-            k.setType(clean(joinCell(cols.get(4), false)));
-            k.setQuantity(PersianNumberParser.parseQuantity(joinCell(cols.get(5), true)));
-            k.setMaterialPrice(PersianNumberParser.parseLong(joinCell(cols.get(6), true)));
-            k.setLaborPrice(PersianNumberParser.parseLong(joinCell(cols.get(7), true)));
-            k.setTotalPrice(PersianNumberParser.parseLong(joinCell(cols.get(8), true)));
+
+            // ستون ۱: کد کالا — عدد خالص
+            k.setProductCode(PersianNumberParser.toLatinDigits(
+                    joinNumericCell(cols.get(1))));
+
+            // ستون ۲: نام کالا — متن
+            k.setProductName(clean(joinTextCell(cols.get(2), false)));
+
+            // ستون ۳: واحد — متن کوتاه
+            k.setUnit(clean(joinTextCell(cols.get(3), true)));
+
+            // ستون ۴: نوع — متن کوتاه
+            k.setType(clean(joinTextCell(cols.get(4), false)));
+
+            // ستون ۵: تعداد — عدد
+            k.setQuantity(PersianNumberParser.parseQuantity(joinNumericCell(cols.get(5))));
+
+            // ستون ۶، ۷، ۸: مبالغ — عدد
+            k.setMaterialPrice(PersianNumberParser.parseLong(joinNumericCell(cols.get(6))));
+            k.setLaborPrice(PersianNumberParser.parseLong(joinNumericCell(cols.get(7))));
+            k.setTotalPrice(PersianNumberParser.parseLong(joinNumericCell(cols.get(8))));
+
             sumTotal += k.getTotalPrice();
             result.add(k);
             if (i < 3) {
@@ -111,70 +116,141 @@ public class TableRowAssembler {
 
     // ----------------------------------------------------------------
 
-    /** مرز بین ۹ ستون (۸ مرز، راست → چپ) از مرکز سرستون‌ها. */
     private float[] buildBounds() {
         float[] c = table.colCenters;
         if (c == null || c.length != 9) {
-            if (table.rightX <= table.leftX) {
-                Log.w(TAG, "buildBounds: invalid X range rightX=" + table.rightX
-                        + " leftX=" + table.leftX);
-                return null;
-            }
+            if (table.rightX <= table.leftX) return null;
             c = new float[9];
             float w = (table.rightX - table.leftX) / 9f;
             for (int i = 0; i < 9; i++) c[i] = table.rightX - w * (i + 0.5f);
-            Log.w(TAG, "buildBounds: header groups != 9, using equal-width fallback");
         }
         float[] b = new float[8];
         for (int i = 0; i < 8; i++) b[i] = (c[i] + c[i + 1]) / 2f;
-        // دو ستون پهن (کد|نام و نام|واحد): مرز را با آینه‌کردن نیمه‌پهنای ستون باریک کناری بساز
         b[1] = 2f * c[1] - b[0];
         b[2] = 2f * c[3] - b[3];
-        StringBuilder sb = new StringBuilder();
-        for (float v : b) sb.append(Math.round(v)).append(' ');
-        Log.i(TAG, "buildBounds: " + sb);
         return b;
     }
 
-    /** ایندکس ستون (۰ = ردیف ... ۸ = مبلغ کل) بر اساس مرکز X المان. */
     private int columnOf(TextElement e, float[] b) {
         float cx = e.x + e.width / 2f;
-        for (int i = 0; i < 8; i++) {
-            if (cx > b[i]) return i;
-        }
+        for (int i = 0; i < 8; i++) if (cx > b[i]) return i;
         return 8;
     }
 
-    /** متن یک سلول: خطوط از بالا به پایین، کلمات هر خط از راست به چپ. */
-    private String joinCell(List<TextElement> els, boolean glueLines) {
+    // ----------------------------------------------------------------
+    //  سلول‌های عددی: مرتب‌سازی صعودی X (چپ به راست)، بدون هیچ تغییر دیگر
+    // ----------------------------------------------------------------
+
+    private String joinNumericCell(List<TextElement> els) {
         if (els == null || els.isEmpty()) return "";
+
+        List<TextElement> s = new ArrayList<>(els);
+        // برای سلول عددی: از چپ به راست (X صعودی)
+        Collections.sort(s, (a, b) -> Float.compare(a.x, b.x));
+
+        StringBuilder out = new StringBuilder();
+        for (TextElement e : s) {
+            if (out.length() > 0) out.append(' ');
+            String t = e.text == null ? "" : e.text.trim();
+            out.append(PersianNumberParser.toLatinDigits(t));
+        }
+        return out.toString().trim();
+    }
+
+    // ----------------------------------------------------------------
+    //  سلول‌های متنی: مرتب‌سازی نزولی X (راست به چپ) + اصلاح ارقام جاسازی‌شده
+    // ----------------------------------------------------------------
+
+    private String joinTextCell(List<TextElement> els, boolean glueLines) {
+        if (els == null || els.isEmpty()) return "";
+
         List<TextElement> s = new ArrayList<>(els);
         Collections.sort(s, (a, b) -> Float.compare(a.y, b.y));
+
         StringBuilder out = new StringBuilder();
         List<TextElement> line = new ArrayList<>();
         float lineY = s.get(0).y;
         for (TextElement e : s) {
             if (Math.abs(e.y - lineY) > 3f) {
-                appendLine(out, line, glueLines);
+                appendTextLine(out, line, glueLines);
                 line.clear();
                 lineY = e.y;
             }
             line.add(e);
         }
-        appendLine(out, line, glueLines);
+        appendTextLine(out, line, glueLines);
         return out.toString().trim();
     }
 
-    private void appendLine(StringBuilder out, List<TextElement> line, boolean glue) {
+    private void appendTextLine(StringBuilder out, List<TextElement> line, boolean glue) {
         if (line.isEmpty()) return;
-        Collections.sort(line, (a, b) -> Float.compare(b.x, a.x));   // راست → چپ
+        // ستون متنی: از راست به چپ
+        Collections.sort(line, (a, b) -> Float.compare(b.x, a.x));
+
         StringBuilder ln = new StringBuilder();
         for (TextElement e : line) {
             if (ln.length() > 0) ln.append(' ');
             ln.append(TableDetector.fixWord(e.text, table.visualOrder));
         }
+        // اصلاح ارقام وارونه درون متن فارسی (اگر وجود دارد)
+        String fixed = reverseEmbeddedDigits(ln.toString());
         if (out.length() > 0 && !glue) out.append(' ');
-        out.append(ln);
+        out.append(fixed);
+    }
+
+    /**
+     * در متن‌های فارسی که PDFsharp آن‌ها را RTL ذخیره کرده، توالی‌های عددی
+     * جاسازی‌شده برعکس شده‌اند. این متد ONLY توالی‌های عددیِ درون رشته‌ای
+     * که حاوی حروف فارسی است را برمی‌گرداند. رشته‌های کاملاً عددی یا لاتین
+     * بدون تغییر باقی می‌مانند.
+     */
+    private static String reverseEmbeddedDigits(String s) {
+        if (s == null || s.isEmpty()) return "";
+
+        // شرط ۱: رشته باید حاوی حروف فارسی/عربی باشد
+        boolean hasArabicLetter = false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            // حروف (نه ارقام) فارسی/عربی
+            if ((c >= 0x0620 && c <= 0x064A) ||
+                    (c >= 0x066E && c <= 0x06D3) ||
+                    (c >= 0x06FA && c <= 0x06FF) ||
+                    (c >= 0xFB50 && c <= 0xFDFF) ||
+                    (c >= 0xFE70 && c <= 0xFEFF)) {
+                hasArabicLetter = true;
+                break;
+            }
+        }
+        if (!hasArabicLetter) return s;   // رشته‌ی خالص عددی/لاتین: دست نزن
+
+        // شرط ۲: رشته نباید کاملاً عدد باشد (باید محتوای غیرعددی داشته باشد)
+        boolean hasNonDigit = false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!Character.isDigit(c) && c != '.' && c != '/' && c != ' ' && c != ',') {
+                hasNonDigit = true;
+                break;
+            }
+        }
+        if (!hasNonDigit) return s;       // کاملاً عددی: دست نزن
+
+        // اصلاح: هر توالی عددی جداگانه را برگردان
+        StringBuilder out = new StringBuilder(s.length());
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isDigit(c) || c == '.' || c == '/') {
+                buf.append(c);
+            } else {
+                if (buf.length() > 0) {
+                    out.append(buf.reverse());
+                    buf.setLength(0);
+                }
+                out.append(c);
+            }
+        }
+        if (buf.length() > 0) out.append(buf.reverse());
+        return out.toString();
     }
 
     private boolean isSmallInteger(String s) {

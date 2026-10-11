@@ -47,8 +47,8 @@ public final class PersianTextShaper {
         FORMS.put('\u0644', new char[]{'\uFEDD', '\uFEDE', '\uFEDF', '\uFEE0'}); // ل
         FORMS.put('\u0645', new char[]{'\uFEE1', '\uFEE2', '\uFEE3', '\uFEE4'}); // م
         FORMS.put('\u0646', new char[]{'\uFEE5', '\uFEE6', '\uFEE7', '\uFEE8'}); // ن
-        FORMS.put('\u0647', new char[]{'\uFEEB', '\uFEEC', '\uFEED', '\uFEEE'}); // ه
-        FORMS.put('\u0648', new char[]{'\uFEE9', '\uFEEA', 0,        0});        // و
+        FORMS.put('\u0647', new char[]{'\uFEE9', '\uFEEA', '\uFEEB', '\uFEEC'}); // ه ← اصلاح شد
+        FORMS.put('\u0648', new char[]{'\uFEED', '\uFEEE', 0,        0});        // و ← اصلاح شد
         FORMS.put('\u0649', new char[]{'\uFEEF', '\uFEF0', 0,        0});        // ى
         FORMS.put('\u064A', new char[]{'\uFEF1', '\uFEF2', '\uFEF3', '\uFEF4'}); // ي عربی
         FORMS.put('\u0629', new char[]{'\uFE93', '\uFE94', 0,        0});        // ة
@@ -60,13 +60,10 @@ public final class PersianTextShaper {
         FORMS.put('\u06CC', new char[]{'\uFBFC', '\uFBFD', '\uFBFE', '\uFBFF'}); // ی
     }
 
-    /** تبدیل متن منطقی فارسی به شکل بصری آماده برای PDFBox. */
     public static String shape(String input) {
         if (input == null || input.isEmpty()) return "";
         return bidi(shapeLetters(input));
     }
-
-    // ----------------------------------------------------------------
 
     private static String shapeLetters(String input) {
         int len = input.length();
@@ -103,7 +100,6 @@ public final class PersianTextShaper {
         return combineLamAlef(out.toString());
     }
 
-    /** ترکیب لام + الف به لیگاتور لا (U+FEFB / U+FEFC). */
     private static String combineLamAlef(String s) {
         StringBuilder sb = new StringBuilder(s.length());
         for (int i = 0; i < s.length(); i++) {
@@ -121,7 +117,6 @@ public final class PersianTextShaper {
         return sb.toString();
     }
 
-    /** BiDi: مرتب‌سازی بصری برای RTL، بدون دست‌زدن به ترتیب درون قطعات LTR. */
     private static String bidi(String input) {
         Bidi bidi = new Bidi(input, Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT);
         if (bidi.isLeftToRight()) return input;

@@ -39,15 +39,15 @@ public class PdfExporter {
 
     // پهنای ستون‌ها (راست → چپ)؛ مجموع = USABLE_W ≈ 515
     private static final float[] COL_W = {
-            30f,   // ردیف
-            65f,   // کد کالا
-            150f,  // نام کالا
-            40f,   // واحد
-            35f,   // نوع
-            40f,   // تعداد
-            55f,   // مبلغ جنس
-            55f,   // مبلغ دستمزد
-            45f    // مبلغ کل
+            24f,   // ردیف
+            60f,   // کد کالا
+            130f,  // نام کالا
+            36f,   // واحد
+            30f,   // نوع
+            36f,   // تعداد
+            67f,   // مبلغ جنس
+            67f,   // مبلغ دستمزد
+            60f    // مبلغ کل
     };
 
     private static final String[] HEADERS = {
@@ -72,9 +72,10 @@ public class PdfExporter {
 
             // ---- جداول ----
             for (KalaTable table : invoice.getTables()) {
+                tw.ensure(HEADER_H + DATA_H * 5);           // حداقل ۵ ردیف جا باشد
                 tw.writeHeader("◄ " + safe(table.getName()), 12);
                 tw.blank(4);
-
+                tw.enableHeaderRedraw(HEADERS, COL_W);      // ← فعال‌سازی
                 tw.drawHeaderRow(HEADERS, COL_W, HEADER_H);
 
                 for (Kala k : table.getItems()) {
@@ -99,13 +100,14 @@ public class PdfExporter {
                 tw.drawFooterRow("جمع کل این جدول",
                         MoneyFormatter.format(table.getGrandTotal()));
 
+                tw.disableHeaderRedraw();                   // ← غیرفعال‌سازی
                 tw.blank(14);
             }
 
             // ---- جمع کل ----
             tw.blank(4);
-            tw.writeHeader("جمع کل (همه جدول‌ها): "
-                    + MoneyFormatter.formatWithRial(invoice.getGrandTotal()), 12);
+            tw.writeHeader("جمع کل همه جدول‌ها: "
+                    + MoneyFormatter.format(invoice.getGrandTotal()) + " ریال", 12);
 
             tw.close();
             doc.save(outFile);
@@ -128,6 +130,8 @@ public class PdfExporter {
 
         private final PDDocument doc;
         private final PDFont     font;
+        private String[] pendingHeaderCells;
+        private float[]  pendingHeaderWidths;
 
         private PDPage page;
         private PDPageContentStream cs;
@@ -148,6 +152,41 @@ public class PdfExporter {
             doc.addPage(page);
             cs = new PDPageContentStream(doc, page);
             y = PAGE_H - MARGIN;
+            // اگر وسط یک جدول هستیم، هدر ستون‌ها را دوباره بکش
+            if (pendingHeaderCells != null && pendingHeaderWidths != null) {
+                drawHeaderRowInternal(pendingHeaderCells, pendingHeaderWidths, HEADER_H);
+            }
+        }
+
+        /** فعال‌سازی بازترسیم هدر در صفحه‌های بعدی. */
+        void enableHeaderRedraw(String[] cells, float[] widths) {
+            this.pendingHeaderCells  = cells;
+            this.pendingHeaderWidths = widths;
+        }
+
+        /** غیرفعال‌سازی (وقتی جدول تمام شد). */
+        void disableHeaderRedraw() {
+            this.pendingHeaderCells  = null;
+            this.pendingHeaderWidths = null;
+        }
+
+        /** نسخه‌ی داخلی drawHeaderRow که از newPage صدا زده می‌شود (بدون ensure). */
+        private void drawHeaderRowInternal(String[] cells, float[] widths, float h) throws IOException {
+            float top = y;
+            float x = PAGE_W - MARGIN;
+            for (int i = 0; i < cells.length; i++) {
+                float w = widths[i];
+                x -= w;
+                cs.setNonStrokingColor(0xDB / 255f, 0xEA / 255f, 0xFE / 255f);
+                cs.addRect(x, top - h, w, h);
+                cs.fill();
+                cs.setStrokingColor(0x64 / 255f, 0x74 / 255f, 0x8B / 255f);
+                cs.setLineWidth(0.5f);
+                cs.addRect(x, top - h, w, h);
+                cs.stroke();
+                drawCellText(cells[i], x, top - h, w, h, 9, false);
+            }
+            y = top - h;
         }
 
         void ensure(float need) throws IOException {
@@ -182,17 +221,14 @@ public class PdfExporter {
             for (int i = 0; i < cells.length; i++) {
                 float w = widths[i];
                 x -= w;
-                // پس‌زمینه آبی روشن
                 cs.setNonStrokingColor(0xDB / 255f, 0xEA / 255f, 0xFE / 255f);
                 cs.addRect(x, top - h, w, h);
                 cs.fill();
-                // مرز
                 cs.setStrokingColor(0x64 / 255f, 0x74 / 255f, 0x8B / 255f);
                 cs.setLineWidth(0.5f);
                 cs.addRect(x, top - h, w, h);
                 cs.stroke();
-                // متن وسط‌چین
-                drawCellText(cells[i], x, top - h, w, h, 9);
+                drawCellText(cells[i], x, top - h, w, h, 9, false);   // وسط‌چین
             }
             y = top - h;
         }
@@ -209,7 +245,9 @@ public class PdfExporter {
                 cs.setLineWidth(0.3f);
                 cs.addRect(x, top - h, w, h);
                 cs.stroke();
-                drawCellText(cells[i], x, top - h, w, h, 9);
+                // ستون ۲ = نام کالا → راست‌چین؛ بقیه وسط‌چین
+                boolean rightAlign = (i == 2);
+                drawCellText(cells[i], x, top - h, w, h, 8, rightAlign);
             }
             y = top - h;
         }
@@ -220,7 +258,6 @@ public class PdfExporter {
             ensure(h);
             float top = y;
 
-            // پس‌زمینه سبز روشن
             cs.setNonStrokingColor(0xE8 / 255f, 0xF5 / 255f, 0xE9 / 255f);
             cs.addRect(MARGIN, top - h, USABLE_W, h);
             cs.fill();
@@ -229,51 +266,48 @@ public class PdfExporter {
             cs.addRect(MARGIN, top - h, USABLE_W, h);
             cs.stroke();
 
-            // پهنای برچسب = ۶ ستون اول از راست؛ پهنای مقدار = ۳ ستون آخر
             float labelW = 0f;
             for (int i = 0; i < 6; i++) labelW += COL_W[i];
             float valueW = USABLE_W - labelW;
 
-            // برچسب، راست‌چین در سمت راست نوار
-            drawCellText(label, PAGE_W - MARGIN - labelW, top - h, labelW, h, 10);
-            // مقدار، وسط‌چین در سمت چپ نوار
-            drawCellText(value, MARGIN, top - h, valueW, h, 10);
+            drawCellText(label, PAGE_W - MARGIN - labelW, top - h, labelW, h, 9, true);   // راست‌چین
+            drawCellText(value, MARGIN, top - h, valueW, h, 9, false);                    // وسط‌چین
 
             y = top - h;
         }
 
         /** رسم متن در مرکز افقی و عمودی سلول، با ellipsis در صورت لزوم. */
         private void drawCellText(String text, float cellX, float cellBottom,
-                                  float cellW, float cellH, int size) throws IOException {
+                                  float cellW, float cellH, int size,
+                                  boolean alignRight) throws IOException {
             String shaped = PersianTextShaper.shape(text == null ? "" : text);
             shaped = sanitize(shaped);
 
-            float w = textWidth(shaped, size);
-            if (w > cellW - 4f) {
-                shaped = ellipsize(shaped, cellW - 4f, size);
-                w = textWidth(shaped, size);
+            // اگر متن در اندازه‌ی فعلی جا نمی‌شود، فونت را پله‌پله کوچک کن
+            int trySize = size;
+            float w = textWidth(shaped, trySize);
+            float maxW = cellW - 4f;
+            while (w > maxW && trySize > 6) {
+                trySize--;
+                w = textWidth(shaped, trySize);
             }
-            float tx = cellX + (cellW - w) / 2f;
-            float ty = cellBottom + (cellH - size) / 2f + 1f;
+            // اگر حتی در ۶pt هم جا نشد، ellipsize کن
+            if (w > maxW) {
+                shaped = ellipsize(shaped, maxW, trySize);
+                w = textWidth(shaped, trySize);
+            }
 
-            // اگر هنوز خطا داد، تک‌تک کاراکترها را تست کن
-            try {
-                cs.beginText();
-                cs.setFont(font, size);
-                cs.newLineAtOffset(tx, ty);
-                cs.showText(shaped);
-                cs.endText();
-            } catch (IllegalArgumentException e) {
-                cs.endText();                      // بستن بلوک متن نیمه‌کاره
-                String safe = sanitizeStrict(shaped);
-                float sw = textWidth(safe, size);
-                float sx = cellX + (cellW - sw) / 2f;
-                cs.beginText();
-                cs.setFont(font, size);
-                cs.newLineAtOffset(sx, ty);
-                cs.showText(safe);
-                cs.endText();
-            }
+            float tx;
+            if (alignRight) tx = cellX + cellW - w - 3f;
+            else            tx = cellX + (cellW - w) / 2f;
+            float ty = cellBottom + (cellH - trySize) / 2f + 1f;
+
+            cs.setNonStrokingColor(0f, 0f, 0f);
+            cs.beginText();
+            cs.setFont(font, trySize);
+            cs.newLineAtOffset(tx, ty);
+            cs.showText(shaped);
+            cs.endText();
         }
 
         private float textWidth(String s, int size) {

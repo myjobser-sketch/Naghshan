@@ -23,9 +23,9 @@ public class PdfParser {
     private static final Pattern PROJECT_NUMBER =
             Pattern.compile("(S\\d{6,})");
     private static final Pattern REQUEST_NUMBER =
-            Pattern.compile("(?:شماره\\s*درخواست|درخواست)\\s*[:\\-]?\\s*(\\d{6,})");
+            Pattern.compile("(?:شماره\\s*درخواست|درخواست)\\D{0,20}?(\\d{6,12})");
     private static final Pattern APPLICANT =
-            Pattern.compile("(?:تامین\\s*برق|عنوان\\s*طرح)\\s*[:\\-]?\\s*(.+)");
+            Pattern.compile("(?:نام\\s*متقاضی|متقاضی)\\s*[:\\-]?\\s*([^\\n]{2,40})");
 
     public Invoice parse(File pdf) throws IOException {
         PdfTextExtractor extractor = new PdfTextExtractor();
