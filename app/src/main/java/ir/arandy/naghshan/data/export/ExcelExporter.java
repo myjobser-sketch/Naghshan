@@ -34,6 +34,10 @@ public class ExcelExporter {
             Workbook wb = new Workbook(fos, "Naghshan", "1.0");
             Worksheet ws = wb.newWorksheet("فاکتور");
 
+            // ⬇ جدید: تنظیم چیدمان راست‌به‌چپ
+            ws.rightToLeft();
+            Log.d(TAG, "export: sheet set to right-to-left");
+
             int row = 0;
 
             // ---------- سرصفحه شرکت / شخص ----------
