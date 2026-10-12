@@ -1,5 +1,7 @@
 package ir.arandy.naghshan.data.export;
 
+import android.util.Log;
+
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.pdmodel.PDPage;
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream;
@@ -10,10 +12,12 @@ import com.tom_roush.pdfbox.pdmodel.font.PDType0Font;
 import java.io.File;
 import java.io.IOException;
 
+import ir.arandy.naghshan.data.profile.ProfileManager;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.model.Kala;
 import ir.arandy.naghshan.model.KalaTable;
 import ir.arandy.naghshan.util.MoneyFormatter;
+import ir.arandy.naghshan.util.MoneyToPersianWords;
 import ir.arandy.naghshan.util.PersianNumberParser;
 import ir.arandy.naghshan.util.PersianTextShaper;
 
@@ -27,6 +31,8 @@ import ir.arandy.naghshan.util.PersianTextShaper;
  *   ردیف | کد کالا | نام کالا | واحد | نوع | تعداد | مبلغ جنس | مبلغ دستمزد | مبلغ کل
  */
 public class PdfExporter {
+
+    private static final String TAG = "NAGHSHAN_PDF";
 
     private static final float MARGIN  = 40f;
     private static final float PAGE_W  = PDRectangle.A4.getWidth();
@@ -57,11 +63,18 @@ public class PdfExporter {
 
     // ----------------------------------------------------------------
 
-    public File export(Invoice invoice, File outFile, File persianFontFile) throws IOException {
+    public File export(Invoice invoice, File outFile, File persianFontFile,
+                       ProfileManager pm) throws IOException {
+        Log.i(TAG, "export: start -> " + outFile.getName());
+
         try (PDDocument doc = new PDDocument()) {
             PDType0Font font = PDType0Font.load(doc, persianFontFile);
-
             TableWriter tw = new TableWriter(doc, font);
+
+            // ---- سرصفحه شرکت ----
+            if (pm != null && pm.isComplete()) {
+                tw.drawCompanyBanner(pm.getCompany(), pm.getFullName());
+            }
 
             // ---- سرصفحه اطلاعات طرح ----
             tw.writeHeader("فاکتور طرح", 15);
@@ -72,12 +85,13 @@ public class PdfExporter {
 
             // ---- جداول ----
             for (KalaTable table : invoice.getTables()) {
-                tw.ensure(HEADER_H + DATA_H * 5);           // حداقل ۵ ردیف جا باشد
+                tw.ensure(HEADER_H + DATA_H * 5);
                 tw.writeHeader("◄ " + safe(table.getName()), 12);
                 tw.blank(4);
-                tw.enableHeaderRedraw(HEADERS, COL_W);      // ← فعال‌سازی
+                tw.enableHeaderRedraw(HEADERS, COL_W);
                 tw.drawHeaderRow(HEADERS, COL_W, HEADER_H);
 
+                int idx = 0;
                 for (Kala k : table.getItems()) {
                     String[] cells = {
                             String.valueOf(k.getRowNumber()),
@@ -90,7 +104,8 @@ public class PdfExporter {
                             MoneyFormatter.format(k.getLaborPrice()),
                             MoneyFormatter.format(k.getTotalPrice())
                     };
-                    tw.drawDataRow(cells, COL_W, DATA_H);
+                    tw.drawDataRow(cells, COL_W, DATA_H, idx % 2 == 1);
+                    idx++;
                 }
 
                 tw.drawFooterRow("جمع جنس این جدول",
@@ -100,17 +115,21 @@ public class PdfExporter {
                 tw.drawFooterRow("جمع کل این جدول",
                         MoneyFormatter.format(table.getGrandTotal()));
 
-                tw.disableHeaderRedraw();                   // ← غیرفعال‌سازی
+                tw.disableHeaderRedraw();
                 tw.blank(14);
             }
 
-            // ---- جمع کل ----
+            // ---- جمع کل + به حروف ----
             tw.blank(4);
             tw.writeHeader("جمع کل همه جدول‌ها: "
                     + MoneyFormatter.format(invoice.getGrandTotal()) + " ریال", 12);
+            tw.blank(4);
+            tw.writeHeader("به حروف: " + MoneyToPersianWords.formatWithRial(
+                    invoice.getGrandTotal()), 10);
 
             tw.close();
             doc.save(outFile);
+            Log.i(TAG, "export: done -> " + outFile.getAbsolutePath());
         }
         return outFile;
     }
@@ -156,6 +175,37 @@ public class PdfExporter {
             if (pendingHeaderCells != null && pendingHeaderWidths != null) {
                 drawHeaderRowInternal(pendingHeaderCells, pendingHeaderWidths, HEADER_H);
             }
+        }
+
+        /** نوار بالای صفحه با نام شرکت و صادرکننده. */
+        void drawCompanyBanner(String company, String person) throws IOException {
+            float bannerH = 40f;
+            cs.setNonStrokingColor(0x1E / 255f, 0x3A / 255f, 0x8A / 255f);
+            cs.addRect(0, PAGE_H - bannerH, PAGE_W, bannerH);
+            cs.fill();
+
+            String c = sanitize(PersianTextShaper.shape(company == null ? "" : company));
+            String p = sanitize(PersianTextShaper.shape(person == null ? "" : person));
+
+            // نام شرکت (چپ‌چین داخل نوار، راست‌چین خوانا)
+            cs.setNonStrokingColor(1f, 1f, 1f);
+            cs.beginText();
+            cs.setFont(font, 12);
+            float cw = textWidth(c, 12);
+            cs.newLineAtOffset(PAGE_W - MARGIN - cw, PAGE_H - 18);
+            cs.showText(c);
+            cs.endText();
+
+            // نام صادرکننده در سمت چپ نوار
+            cs.beginText();
+            cs.setFont(font, 9);
+            float pw = textWidth(p, 9);
+            cs.newLineAtOffset(MARGIN, PAGE_H - 18);
+            cs.showText(p);
+            cs.endText();
+
+            y = PAGE_H - bannerH - 8;
+            Log.d(TAG, "banner: " + company + " / " + person);
         }
 
         /** فعال‌سازی بازترسیم هدر در صفحه‌های بعدی. */
@@ -234,10 +284,17 @@ public class PdfExporter {
         }
 
         /** یک ردیف داده معمولی. */
-        void drawDataRow(String[] cells, float[] widths, float h) throws IOException {
+        void drawDataRow(String[] cells, float[] widths, float h, boolean alternate) throws IOException {
             ensure(h);
             float top = y;
             float x = PAGE_W - MARGIN;
+
+            if (alternate) {
+                cs.setNonStrokingColor(0xF1 / 255f, 0xF5 / 255f, 0xF9 / 255f);
+                cs.addRect(MARGIN, top - h, USABLE_W, h);
+                cs.fill();
+            }
+
             for (int i = 0; i < cells.length; i++) {
                 float w = widths[i];
                 x -= w;
@@ -245,7 +302,6 @@ public class PdfExporter {
                 cs.setLineWidth(0.3f);
                 cs.addRect(x, top - h, w, h);
                 cs.stroke();
-                // ستون ۲ = نام کالا → راست‌چین؛ بقیه وسط‌چین
                 boolean rightAlign = (i == 2);
                 drawCellText(cells[i], x, top - h, w, h, 8, rightAlign);
             }

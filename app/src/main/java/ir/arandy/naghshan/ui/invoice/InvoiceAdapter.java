@@ -23,6 +23,16 @@ public class InvoiceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final List<Object> data = new ArrayList<>();
 
+    public interface OnItemClickListener {
+        void onItemClick(Kala k, int position);
+    }
+
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener l) {
+        this.listener = l;
+    }
+
     public void submit(Invoice inv) {
         data.clear();
         if (inv != null && inv.getTables() != null) {
@@ -53,7 +63,8 @@ public class InvoiceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return new KalaVH(v);
     }
 
-    @Override public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int pos) {
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int pos) {
         if (h instanceof HeaderVH) {
             ((HeaderVH) h).tv.setText((String) data.get(pos));
         } else {
@@ -65,6 +76,12 @@ public class InvoiceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             kh.unit.setText("واحد: " + (k.getUnit() == null ? "-" : k.getUnit()));
             kh.qty.setText("تعداد: " + formatQty(k.getQuantity()));
             kh.total.setText("مبلغ کل: " + MoneyFormatter.formatWithRial(k.getTotalPrice()));
+
+            // ⬇ جدید: کلیک برای ویرایش قیمت
+            final int fPos = pos;
+            kh.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(k, fPos);
+            });
         }
     }
 

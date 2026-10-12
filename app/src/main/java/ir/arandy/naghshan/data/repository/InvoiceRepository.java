@@ -11,6 +11,7 @@ import ir.arandy.naghshan.calculator.InvoiceCalculator;
 import ir.arandy.naghshan.data.export.ExcelExporter;
 import ir.arandy.naghshan.data.export.PdfExporter;
 import ir.arandy.naghshan.data.pdf.PdfParser;
+import ir.arandy.naghshan.data.profile.ProfileManager;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.storage.FileStorage;
 
@@ -47,11 +48,13 @@ public class InvoiceRepository {
 
     public File exportExcel(Invoice invoice) throws IOException {
         File out = storage.newExcel(invoice.getProjectInfo().getProjectNumber());
-        return excel.export(invoice, out);
+        ProfileManager pm = new ProfileManager(ctx);
+        return excel.export(invoice, out, pm);
     }
 
     public File exportPdf(Invoice invoice, File persianFontFile) throws IOException {
         File out = storage.newPdf(invoice.getProjectInfo().getProjectNumber());
-        return pdf.export(invoice, out, persianFontFile);
+        ProfileManager pm = new ProfileManager(ctx);
+        return pdf.export(invoice, out, persianFontFile, pm);
     }
 }

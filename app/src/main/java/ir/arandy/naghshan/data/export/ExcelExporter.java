@@ -1,5 +1,7 @@
 package ir.arandy.naghshan.data.export;
 
+import android.util.Log;
+
 import org.dhatim.fastexcel.BorderStyle;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
@@ -8,9 +10,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import ir.arandy.naghshan.data.profile.ProfileManager;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.model.Kala;
 import ir.arandy.naghshan.model.KalaTable;
+import ir.arandy.naghshan.util.MoneyToPersianWords;
 
 /**
  * تولید Excel از Invoice.
@@ -21,12 +25,30 @@ import ir.arandy.naghshan.model.KalaTable;
  */
 public class ExcelExporter {
 
-    public File export(Invoice invoice, File outFile) throws IOException {
+    private static final String TAG = "NAGHSHAN_EXCEL";
+
+    public File export(Invoice invoice, File outFile, ProfileManager pm) throws IOException {
+        Log.i(TAG, "export: start -> " + outFile.getName());
+
         try (FileOutputStream fos = new FileOutputStream(outFile)) {
             Workbook wb = new Workbook(fos, "Naghshan", "1.0");
             Worksheet ws = wb.newWorksheet("فاکتور");
 
             int row = 0;
+
+            // ---------- سرصفحه شرکت / شخص ----------
+            if (pm != null && pm.isComplete()) {
+                ws.value(row, 0, pm.getCompany());
+                ws.style(row, 0).bold().fontSize(14).set();
+                row++;
+
+                ws.value(row, 0, "صادرکننده: " + pm.getFullName());
+                ws.style(row, 0).fontSize(10).set();
+                row++;
+
+                row++; // یک خط خالی
+                Log.d(TAG, "header: " + pm.getCompany() + " / " + pm.getFullName());
+            }
 
             // ---------- سرصفحه کلی ----------
             ws.value(row, 0, "شماره طرح:");
@@ -41,14 +63,23 @@ public class ExcelExporter {
             ws.value(row, 1, nz(invoice.getProjectInfo().getRequestNumber()));
             row++;
 
-            row++; // خط خالی
+            row++;
+
+            // ---------- پهنای ستون‌ها ----------
+            ws.width(0, 8);
+            ws.width(1, 14);
+            ws.width(2, 40);
+            ws.width(3, 10);
+            ws.width(4, 12);
+            ws.width(5, 10);
+            ws.width(6, 18);
+            ws.width(7, 18);
+            ws.width(8, 20);
 
             // ---------- برای هر جدول ----------
             for (KalaTable table : invoice.getTables()) {
 
-                // زیرعنوان جدول — در سلول A می‌نویسیم و استایل می‌دهیم.
                 ws.value(row, 0, nz(table.getName()));
-                // به‌جای mergeCells، سلول را bold و پررنگ می‌کنیم
                 for (int c = 0; c < 9; c++) {
                     ws.style(row, c)
                             .borderStyle(BorderStyle.THIN)
@@ -59,7 +90,6 @@ public class ExcelExporter {
                 ws.style(row, 0).bold().fontSize(13).set();
                 row++;
 
-                // سرصفحه ستون‌ها
                 String[] headers = {
                         "ردیف", "کد کالا", "نام کالا", "واحد", "نوع",
                         "تعداد", "مبلغ جنس", "مبلغ دستمزد", "مبلغ کل"
@@ -76,7 +106,6 @@ public class ExcelExporter {
                 }
                 row++;
 
-                // ردیف‌های کالا
                 for (Kala k : table.getItems()) {
                     ws.value(row, 0, k.getRowNumber());
                     ws.value(row, 1, nz(k.getProductCode()));
@@ -94,10 +123,13 @@ public class ExcelExporter {
                                 .borderColor("CBD5E1")
                                 .set();
                     }
+                    // فرمت عددی سه ستون آخر
+                    ws.style(row, 6).format("#,##0").set();
+                    ws.style(row, 7).format("#,##0").set();
+                    ws.style(row, 8).format("#,##0").set();
                     row++;
                 }
 
-                // جمع‌های جدول
                 ws.value(row, 0, "جمع جنس");
                 ws.value(row, 1, table.getMaterialTotal());
                 applyFooterStyle(ws, row, 0, "E8F5E9");
@@ -113,16 +145,23 @@ public class ExcelExporter {
                 applyFooterStyle(ws, row, 0, "A7F3D0");
                 row++;
 
-                row += 2; // دو خط خالی بین جدول‌ها
+                row += 2;
             }
 
-            // ---------- جمع کل نهایی ----------
+            // ---------- جمع کل نهایی + به حروف ----------
             ws.value(row, 0, "جمع کل (همه جدول‌ها)");
             ws.value(row, 1, invoice.getGrandTotal());
             ws.style(row, 0).bold().fillColor("FEF3C7").set();
-            ws.style(row, 1).bold().fillColor("FEF3C7").set();
+            ws.style(row, 1).bold().fillColor("FEF3C7").format("#,##0").set();
+            row++;
+
+            ws.value(row, 0, "به حروف:");
+            ws.value(row, 1, MoneyToPersianWords.formatWithRial(invoice.getGrandTotal()));
+            ws.style(row, 0).bold().set();
+            ws.style(row, 1).italic().set();
 
             wb.finish();
+            Log.i(TAG, "export: done -> " + outFile.getAbsolutePath());
         }
         return outFile;
     }

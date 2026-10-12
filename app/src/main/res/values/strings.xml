@@ -44,6 +44,10 @@
     <string name="nav_projects">پروژه‌ها</string>
     <string name="nav_tools">ابزارها</string>
     <string name="nav_profile">پروفایل</string>
+    <string name="profile_title">پروفایل کاربر</string>
+    <string name="history_title">تاریخچه پروژه‌ها</string>
+    <string name="history_empty">رکوردی یافت نشد</string>
+    <string name="history_search_hint">جستجو…</string>
 
     <string name="toast_pick_pdf_first">ابتدا یک فایل PDF انتخاب کنید</string>
     <string name="toast_extract_done">استخراج انجام شد. اقلام: %1$d</string>

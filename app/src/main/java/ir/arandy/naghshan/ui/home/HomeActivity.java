@@ -9,12 +9,13 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-
+import ir.arandy.naghshan.ui.history.HistoryActivity;
 import ir.arandy.naghshan.R;
 import ir.arandy.naghshan.databinding.ActivityHomeBinding;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.ui.invoice.InvoiceActivity;
 import ir.arandy.naghshan.ui.invoice.InvoiceFragment;
+import ir.arandy.naghshan.ui.profile.ProfileActivity;
 import ir.arandy.naghshan.util.MoneyFormatter;
 
 public class HomeActivity extends AppCompatActivity {
@@ -53,18 +54,22 @@ public class HomeActivity extends AppCompatActivity {
                     .putExtra(InvoiceFragment.ARG_INVOICE, inv));
         });
 
+        // ⬇⬇⬇ جدید: تاریخچه
+        binding.cardHistory.setOnClickListener(v ->
+                startActivity(new Intent(this, HistoryActivity.class)));
+
         binding.bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 return true;
             } else if (id == R.id.nav_projects) {
-                Toast.makeText(this, "پروژه‌ها (به‌زودی)", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, HistoryActivity.class));
                 return false;
             } else if (id == R.id.nav_tools) {
                 Toast.makeText(this, "ابزارها (به‌زودی)", Toast.LENGTH_SHORT).show();
                 return false;
             } else if (id == R.id.nav_profile) {
-                Toast.makeText(this, "پروفایل (به‌زودی)", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, ProfileActivity.class));
                 return false;
             }
             return false;
@@ -80,7 +85,6 @@ public class HomeActivity extends AppCompatActivity {
                     binding.progress.setVisibility(View.GONE);
                     Invoice inv = vm.getInvoice().getValue();
                     if (inv != null) {
-                        // ⬇️ تغییر اینجا: getItemsCount() به‌جای getItems().size()
                         Toast.makeText(this,
                                 getString(R.string.toast_extract_done, inv.getItemsCount()),
                                 Toast.LENGTH_SHORT).show();

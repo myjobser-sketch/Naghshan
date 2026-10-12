@@ -1,6 +1,7 @@
 package ir.arandy.naghshan.ui.output;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,13 +9,17 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
+import java.io.File;
 
 import ir.arandy.naghshan.data.repository.InvoiceRepository;
 import ir.arandy.naghshan.databinding.FragmentOutputBinding;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.util.MoneyFormatter;
+import ir.arandy.naghshan.util.ShareUtil;
 
 public class OutputFragment extends Fragment {
 
@@ -56,6 +61,12 @@ public class OutputFragment extends Fragment {
         vm.getInvoice().observe(getViewLifecycleOwner(), i -> {
             if (i != null) b.txtNewTotal.setText(MoneyFormatter.formatWithRial(i.getGrandTotal()));
         });
+
+        // ⬇ جدید: نمایش دیالوگ اشتراک‌گذاری بعد از ساخت فایل
+        vm.getLastExportFile().observe(getViewLifecycleOwner(), file -> {
+            if (file == null) return;
+            showShareDialog(file, vm.getLastExportMime().getValue());
+        });
     }
 
     private void apply() {
@@ -76,5 +87,21 @@ public class OutputFragment extends Fragment {
                 requireContext().getApplicationContext())
                 .applyAdjustment(base, pct, mat, lab);
         vm.setInvoice(updated);
+    }
+
+    /**
+     * دیالوگ اشتراک‌گذاری پس از ساخت موفق فایل.
+     */
+    private void showShareDialog(File file, String mime) {
+        if (file == null || !file.exists()) return;
+        Log.i("NAGHSHAN_OUTPUT", "showShareDialog: " + file.getName() + " mime=" + mime);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("فایل آماده است")
+                .setMessage(file.getName())
+                .setPositiveButton("اشتراک‌گذاری", (d, w) ->
+                        ShareUtil.share(requireContext(), file, mime))
+                .setNeutralButton("بستن", null)
+                .show();
     }
 }
