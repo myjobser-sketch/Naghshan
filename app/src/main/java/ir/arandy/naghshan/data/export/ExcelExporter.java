@@ -17,59 +17,33 @@ import ir.arandy.naghshan.model.KalaTable;
 import ir.arandy.naghshan.util.MoneyToPersianWords;
 
 /**
- * تولید Excel از Invoice.
- * هر جدول (KalaTable) با زیرعنوان خودش + سرصفحه + ردیف‌ها + جمع‌ها چاپ می‌شود.
- *
- * نکته: FastExcel نسخه 0.15.x متد mergeCells ندارد.
- * برای جایگزینی، از یک سلول بزرگ استفاده می‌کنیم و بقیه را خالی می‌گذاریم.
+ * تولید Excel با سربرگ رنگی + چیدمان راست‌به‌چپ + توضیحات.
  */
 public class ExcelExporter {
 
     private static final String TAG = "NAGHSHAN_EXCEL";
 
-    public File export(Invoice invoice, File outFile, ProfileManager pm) throws IOException {
+    public File export(Invoice invoice, File outFile,
+                       ProfileManager pm, ExportOptions opts) throws IOException {
+
+        if (opts == null) opts = new ExportOptions();
         Log.i(TAG, "export: start -> " + outFile.getName());
+        opts.log();
 
         try (FileOutputStream fos = new FileOutputStream(outFile)) {
             Workbook wb = new Workbook(fos, "Naghshan", "1.0");
             Worksheet ws = wb.newWorksheet("فاکتور");
 
-            // ⬇ جدید: تنظیم چیدمان راست‌به‌چپ
-            ws.rightToLeft();
-            Log.d(TAG, "export: sheet set to right-to-left");
-
-            int row = 0;
-
-            // ---------- سرصفحه شرکت / شخص ----------
-            if (pm != null && pm.isComplete()) {
-                ws.value(row, 0, pm.getCompany());
-                ws.style(row, 0).bold().fontSize(14).set();
-                row++;
-
-                ws.value(row, 0, "صادرکننده: " + pm.getFullName());
-                ws.style(row, 0).fontSize(10).set();
-                row++;
-
-                row++; // یک خط خالی
-                Log.d(TAG, "header: " + pm.getCompany() + " / " + pm.getFullName());
+            // ⬇ راست‌به‌چپ کردن کل شیت
+            try {
+                ws.rightToLeft();
+                Log.d(TAG, "sheet rightToLeft applied");
+            } catch (Throwable t) {
+                Log.w(TAG, "rightToLeft not supported in this fastexcel version: "
+                        + t.getMessage());
             }
 
-            // ---------- سرصفحه کلی ----------
-            ws.value(row, 0, "شماره طرح:");
-            ws.value(row, 1, nz(invoice.getProjectInfo().getProjectNumber()));
-            row++;
-
-            ws.value(row, 0, "متقاضی:");
-            ws.value(row, 1, nz(invoice.getProjectInfo().getApplicantName()));
-            row++;
-
-            ws.value(row, 0, "شماره درخواست:");
-            ws.value(row, 1, nz(invoice.getProjectInfo().getRequestNumber()));
-            row++;
-
-            row++;
-
-            // ---------- پهنای ستون‌ها ----------
+            // پهنای ستون‌ها
             ws.width(0, 8);
             ws.width(1, 14);
             ws.width(2, 40);
@@ -80,10 +54,61 @@ public class ExcelExporter {
             ws.width(7, 18);
             ws.width(8, 20);
 
-            // ---------- برای هر جدول ----------
+            int row = 0;
+            String bgHex = (opts.themeColor == null || opts.themeColor.isEmpty())
+                    ? "F1F5F9"
+                    : opts.themeColor.replace("#", "");
+
+            // ---------- ردیف ۰: نام شرکت ----------
+            String company = (pm == null || pm.getCompany().isEmpty())
+                    ? "—" : pm.getCompany();
+            ws.value(row, 0, company);
+            for (int c = 0; c < 9; c++) {
+                ws.style(row, c).fillColor(bgHex).borderStyle(BorderStyle.THIN)
+                        .borderColor("94A3B8").set();
+            }
+            ws.style(row, 0).bold().fontSize(14).set();
+            row++;
+
+            // ---------- ردیف ۱: نام صادرکننده ----------
+            String issuer = (pm == null || pm.getFullName().isEmpty())
+                    ? "" : "صادرکننده: " + pm.getFullName();
+            ws.value(row, 0, issuer);
+            for (int c = 0; c < 9; c++) {
+                ws.style(row, c).fillColor(bgHex).borderStyle(BorderStyle.THIN)
+                        .borderColor("94A3B8").set();
+            }
+            ws.style(row, 0).fontSize(10).set();
+            row++;
+
+            // ---------- ردیف ۲: خالی ----------
+            row++;
+
+            // ---------- ردیف ۳: تاریخ و شماره فاکتور ----------
+            ws.value(row, 0, "تاریخ فاکتور: " + safe(opts.issueDate));
+            ws.style(row, 0).bold().fontSize(10).set();
+
+            ws.value(row, 5, "شماره فاکتور: " + safe(opts.invoiceNumber));
+            ws.style(row, 5).bold().fontSize(10).set();
+            row++;
+
+            // ---------- ردیف ۴: شماره طرح ----------
+            ws.value(row, 0, "شماره طرح: " +
+                    safe(invoice.getProjectInfo().getProjectNumber()));
+            ws.style(row, 0).fontSize(10).set();
+            row++;
+
+            // ---------- ردیف ۵: نام طرح ----------
+            ws.value(row, 0, "نام طرح: " +
+                    safe(invoice.getProjectInfo().getProjectName()));
+            ws.style(row, 0).fontSize(10).set();
+            row += 2;
+
+            // ---------- جداول ----------
             for (KalaTable table : invoice.getTables()) {
 
-                ws.value(row, 0, nz(table.getName()));
+                // زیرعنوان
+                ws.value(row, 0, safe(table.getName()));
                 for (int c = 0; c < 9; c++) {
                     ws.style(row, c)
                             .borderStyle(BorderStyle.THIN)
@@ -94,6 +119,7 @@ public class ExcelExporter {
                 ws.style(row, 0).bold().fontSize(13).set();
                 row++;
 
+                // سرستون‌ها
                 String[] headers = {
                         "ردیف", "کد کالا", "نام کالا", "واحد", "نوع",
                         "تعداد", "مبلغ جنس", "مبلغ دستمزد", "مبلغ کل"
@@ -110,12 +136,13 @@ public class ExcelExporter {
                 }
                 row++;
 
+                // داده‌ها
                 for (Kala k : table.getItems()) {
                     ws.value(row, 0, k.getRowNumber());
-                    ws.value(row, 1, nz(k.getProductCode()));
-                    ws.value(row, 2, nz(k.getProductName()));
-                    ws.value(row, 3, nz(k.getUnit()));
-                    ws.value(row, 4, nz(k.getType()));
+                    ws.value(row, 1, safe(k.getProductCode()));
+                    ws.value(row, 2, safe(k.getProductName()));
+                    ws.value(row, 3, safe(k.getUnit()));
+                    ws.value(row, 4, safe(k.getType()));
                     ws.value(row, 5, k.getQuantity());
                     ws.value(row, 6, k.getMaterialPrice());
                     ws.value(row, 7, k.getLaborPrice());
@@ -127,42 +154,57 @@ public class ExcelExporter {
                                 .borderColor("CBD5E1")
                                 .set();
                     }
-                    // فرمت عددی سه ستون آخر
-                    ws.style(row, 6).format("#,##0").set();
-                    ws.style(row, 7).format("#,##0").set();
-                    ws.style(row, 8).format("#,##0").set();
                     row++;
                 }
 
+                // جمع‌ها
                 ws.value(row, 0, "جمع جنس");
                 ws.value(row, 1, table.getMaterialTotal());
-                applyFooterStyle(ws, row, 0, "E8F5E9");
+                applyFooterStyle(ws, row, "E8F5E9");
                 row++;
 
                 ws.value(row, 0, "جمع دستمزد");
                 ws.value(row, 1, table.getLaborTotal());
-                applyFooterStyle(ws, row, 0, "E8F5E9");
+                applyFooterStyle(ws, row, "E8F5E9");
                 row++;
 
                 ws.value(row, 0, "جمع کل");
                 ws.value(row, 1, table.getGrandTotal());
-                applyFooterStyle(ws, row, 0, "A7F3D0");
+                applyFooterStyle(ws, row, "A7F3D0");
                 row++;
 
                 row += 2;
             }
 
-            // ---------- جمع کل نهایی + به حروف ----------
+            // ---------- جمع کل نهایی ----------
             ws.value(row, 0, "جمع کل (همه جدول‌ها)");
             ws.value(row, 1, invoice.getGrandTotal());
             ws.style(row, 0).bold().fillColor("FEF3C7").set();
-            ws.style(row, 1).bold().fillColor("FEF3C7").format("#,##0").set();
+            ws.style(row, 1).bold().fillColor("FEF3C7").set();
             row++;
 
+            // ---------- به حروف ----------
             ws.value(row, 0, "به حروف:");
-            ws.value(row, 1, MoneyToPersianWords.formatWithRial(invoice.getGrandTotal()));
             ws.style(row, 0).bold().set();
+            ws.value(row, 1, MoneyToPersianWords.formatWithRial(invoice.getGrandTotal()));
             ws.style(row, 1).italic().set();
+            row += 2;
+
+            // ---------- توضیحات ----------
+            if (opts.invoiceNote != null && !opts.invoiceNote.trim().isEmpty()) {
+                ws.value(row, 0, "توضیحات:");
+                ws.style(row, 0).bold().fontSize(10).set();
+                row++;
+
+                ws.value(row, 0, opts.invoiceNote.trim());
+                ws.style(row, 0).fontSize(9).set();
+                // تلاش برای wrap؛ در fastexcel 0.15 پشتیبانی نمی‌شود → try/catch
+                try {
+                    ws.style(row, 0).wrapText(true).set();
+                } catch (Throwable ignored) { /* ignore */ }
+                ws.style(row, 0).horizontalAlignment("right").set();
+                row++;
+            }
 
             wb.finish();
             Log.i(TAG, "export: done -> " + outFile.getAbsolutePath());
@@ -170,11 +212,10 @@ public class ExcelExporter {
         return outFile;
     }
 
-    /** استایل یکسان برای ردیف‌های جمع هر جدول. */
-    private void applyFooterStyle(Worksheet ws, int row, int col, String color) {
-        ws.style(row, col).bold().fillColor(color).set();
-        ws.style(row, col + 1).bold().fillColor(color).set();
+    private static void applyFooterStyle(Worksheet ws, int row, String color) {
+        ws.style(row, 0).bold().fillColor(color).set();
+        ws.style(row, 1).bold().fillColor(color).set();
     }
 
-    private static String nz(String s) { return s == null ? "" : s; }
+    private static String safe(String s) { return s == null ? "" : s; }
 }

@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+import ir.arandy.naghshan.data.export.ExportOptions;
 import ir.arandy.naghshan.data.history.ExportRecord;
 import ir.arandy.naghshan.data.history.HistoryManager;
 import ir.arandy.naghshan.data.repository.InvoiceRepository;
@@ -43,13 +44,13 @@ public class OutputViewModel extends AndroidViewModel {
 
     public void setInvoice(Invoice inv) { invoice.setValue(inv); }
 
-    public void exportExcel() {
+    public void exportExcel(ExportOptions opts) {
         Invoice inv = invoice.getValue();
         if (inv == null) return;
         state.setValue(State.WORKING);
         new Thread(() -> {
             try {
-                File f = repo.exportExcel(inv);
+                File f = repo.exportExcel(inv, opts);
                 Log.i(TAG, "excel exported: " + f.getAbsolutePath());
 
                 recordHistory(inv, f.getAbsolutePath(), null);
@@ -68,14 +69,14 @@ public class OutputViewModel extends AndroidViewModel {
         }).start();
     }
 
-    public void exportPdf() {
+    public void exportPdf(ExportOptions opts) {
         Invoice inv = invoice.getValue();
         if (inv == null) return;
         state.setValue(State.WORKING);
         new Thread(() -> {
             try {
                 File font = copyFontFromAssets();
-                File f = repo.exportPdf(inv, font);
+                File f = repo.exportPdf(inv, font, opts);
                 Log.i(TAG, "pdf exported: " + f.getAbsolutePath());
 
                 recordHistory(inv, null, f.getAbsolutePath());

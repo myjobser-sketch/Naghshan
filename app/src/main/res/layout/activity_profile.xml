@@ -63,6 +63,100 @@
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- توضیحات پیش‌فرض فاکتور -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="توضیحات پیش‌فرض فاکتور (اختیاری، حداکثر ۳۰۰ کاراکتر)"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editInvoiceNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="3"
+                    android:gravity="top|start"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:hint="مثال: این فاکتور به‌علت نوسانات بازار تا ۴۸ ساعت اعتبار دارد." />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- پالت رنگ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="رنگ سربرگ فاکتور"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/color0"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp" />
+
+                <RadioButton
+                    android:id="@+id/color1"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp" />
+
+                <RadioButton
+                    android:id="@+id/color2"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp" />
+
+                <RadioButton
+                    android:id="@+id/color3"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp" />
+
+                <RadioButton
+                    android:id="@+id/color4"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp" />
+
+                <RadioButton
+                    android:id="@+id/color5"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+            </RadioGroup>
+
+            <!-- پیش‌نمایش رنگ -->
+            <LinearLayout
+                android:id="@+id/previewBanner"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:padding="8dp"
+                android:gravity="center_vertical|end"
+                android:background="#F1F5F9">
+
+                <TextView
+                    android:id="@+id/previewBannerText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="نام شرکت"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="#0F172A" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"

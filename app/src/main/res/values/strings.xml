@@ -48,6 +48,13 @@
     <string name="history_title">تاریخچه پروژه‌ها</string>
     <string name="history_empty">رکوردی یافت نشد</string>
     <string name="history_search_hint">جستجو…</string>
+    <string name="profile_invoice_note">توضیحات پیش‌فرض فاکتور</string>
+    <string name="profile_color_label">رنگ سربرگ فاکتور</string>
+
+    <string name="output_invoice_info">اطلاعات فاکتور</string>
+    <string name="output_issue_date_hint">تاریخ فاکتور (مثال: 1405/08/09)</string>
+    <string name="output_invoice_number_hint">شماره فاکتور</string>
+    <string name="output_invoice_note_hint">توضیحات فاکتور</string>
 
     <string name="toast_pick_pdf_first">ابتدا یک فایل PDF انتخاب کنید</string>
     <string name="toast_extract_done">استخراج انجام شد. اقلام: %1$d</string>

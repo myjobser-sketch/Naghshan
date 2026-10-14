@@ -26,6 +26,19 @@ public class ProjectInfo implements Serializable {
     public String getRequestNumber() { return requestNumber; }
     public void   setRequestNumber(String v) { this.requestNumber = v; }
 
+    /**
+     * نام طرح را از ترکیب نام متقاضی و شماره درخواست می‌سازد.
+     * نمونه: "عبدالله پاشازاده، احمد رحیمی - 472415617، 472401005"
+     */
+    public String getProjectName() {
+        String name = applicantName == null ? "" : applicantName.trim();
+        String req  = requestNumber == null ? "" : requestNumber.trim();
+        if (name.isEmpty() && req.isEmpty()) return "-";
+        if (req.isEmpty())  return name;
+        if (name.isEmpty()) return req;
+        return name + " - " + req;
+    }
+
     public boolean isValid() {
         return projectNumber != null && !projectNumber.isEmpty();
     }

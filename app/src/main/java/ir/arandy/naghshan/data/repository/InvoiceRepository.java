@@ -9,6 +9,7 @@ import java.io.InputStream;
 
 import ir.arandy.naghshan.calculator.InvoiceCalculator;
 import ir.arandy.naghshan.data.export.ExcelExporter;
+import ir.arandy.naghshan.data.export.ExportOptions;
 import ir.arandy.naghshan.data.export.PdfExporter;
 import ir.arandy.naghshan.data.pdf.PdfParser;
 import ir.arandy.naghshan.data.profile.ProfileManager;
@@ -46,15 +47,15 @@ public class InvoiceRepository {
         return calculator.applyAdjustment(invoice, percent, toMaterial, toLabor);
     }
 
-    public File exportExcel(Invoice invoice) throws IOException {
+    public File exportExcel(Invoice invoice, ExportOptions opts) throws IOException {
         File out = storage.newExcel(invoice.getProjectInfo().getProjectNumber());
         ProfileManager pm = new ProfileManager(ctx);
-        return excel.export(invoice, out, pm);
+        return excel.export(invoice, out, pm, opts);
     }
 
-    public File exportPdf(Invoice invoice, File persianFontFile) throws IOException {
+    public File exportPdf(Invoice invoice, File persianFontFile, ExportOptions opts) throws IOException {
         File out = storage.newPdf(invoice.getProjectInfo().getProjectNumber());
         ProfileManager pm = new ProfileManager(ctx);
-        return pdf.export(invoice, out, persianFontFile, pm);
+        return pdf.export(invoice, out, persianFontFile, pm, opts);
     }
 }

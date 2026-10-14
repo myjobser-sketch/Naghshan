@@ -15,10 +15,13 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.io.File;
 
+import ir.arandy.naghshan.data.export.ExportOptions;
+import ir.arandy.naghshan.data.profile.ProfileManager;
 import ir.arandy.naghshan.data.repository.InvoiceRepository;
 import ir.arandy.naghshan.databinding.FragmentOutputBinding;
 import ir.arandy.naghshan.model.Invoice;
 import ir.arandy.naghshan.util.MoneyFormatter;
+import ir.arandy.naghshan.util.PersianNumberParser;
 import ir.arandy.naghshan.util.ShareUtil;
 
 public class OutputFragment extends Fragment {
@@ -33,7 +36,8 @@ public class OutputFragment extends Fragment {
         return b.getRoot();
     }
 
-    @Override public void onViewCreated(@NonNull View v, @Nullable Bundle s) {
+    @Override
+    public void onViewCreated(@NonNull View v, @Nullable Bundle s) {
         super.onViewCreated(v, s);
 
         vm = new ViewModelProvider(this).get(OutputViewModel.class);
@@ -49,11 +53,29 @@ public class OutputFragment extends Fragment {
             }
         }
 
+        // ⬇ جدید: مقداردهی اولیه‌ی توضیحات از پروفایل
+        ProfileManager pm = new ProfileManager(requireContext());
+        if (b.editInvoiceNote.getText() == null
+                || b.editInvoiceNote.getText().toString().isEmpty()) {
+            b.editInvoiceNote.setText(pm.getInvoiceNote());
+        }
+
+        // ⬇ جدید: hint خودکار برای شماره فاکتور
+        b.editInvoiceNumber.setHint("مثال: 1405-001");
+
         b.radioIncrease.setChecked(true);
 
         b.btnApply.setOnClickListener(x -> apply());
-        b.btnExportPdf.setOnClickListener(x -> vm.exportPdf());
-        b.btnExportExcel.setOnClickListener(x -> vm.exportExcel());
+        b.btnExportPdf.setOnClickListener(x -> {
+            ExportOptions opts = buildExportOptions();
+            opts.log();
+            vm.exportPdf(opts);
+        });
+        b.btnExportExcel.setOnClickListener(x -> {
+            ExportOptions opts = buildExportOptions();
+            opts.log();
+            vm.exportExcel(opts);
+        });
 
         vm.getMessage().observe(getViewLifecycleOwner(), m ->
                 Toast.makeText(requireContext(), m, Toast.LENGTH_LONG).show());
@@ -62,7 +84,7 @@ public class OutputFragment extends Fragment {
             if (i != null) b.txtNewTotal.setText(MoneyFormatter.formatWithRial(i.getGrandTotal()));
         });
 
-        // ⬇ جدید: نمایش دیالوگ اشتراک‌گذاری بعد از ساخت فایل
+        // ⬇ جدید: دیالوگ اشتراک‌گذاری بعد از ساخت فایل
         vm.getLastExportFile().observe(getViewLifecycleOwner(), file -> {
             if (file == null) return;
             showShareDialog(file, vm.getLastExportMime().getValue());
@@ -87,6 +109,23 @@ public class OutputFragment extends Fragment {
                 requireContext().getApplicationContext())
                 .applyAdjustment(base, pct, mat, lab);
         vm.setInvoice(updated);
+    }
+
+    /**
+     * ساخت ExportOptions از ورودی‌های کاربر + پروفایل.
+     */
+    private ExportOptions buildExportOptions() {
+        ProfileManager pm = new ProfileManager(requireContext());
+        ExportOptions opts = new ExportOptions();
+        opts.issueDate     = str(b.editIssueDate.getText());
+        opts.invoiceNumber = str(b.editInvoiceNumber.getText());
+        opts.invoiceNote   = str(b.editInvoiceNote.getText());
+        opts.themeColor    = pm.getThemeColor();
+        return opts;
+    }
+
+    private static String str(CharSequence cs) {
+        return cs == null ? "" : cs.toString().trim();
     }
 
     /**
